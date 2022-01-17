@@ -11,6 +11,7 @@ const multer  		= require('multer');		// used to upload files and process any mu
 const formData 		= multer();					//{ dest: 'uploads/' }); // https://www.npmjs.com/package/multer
 
 const app			= express();				// middlewares handler
+const port = process.env.PORT || 3000;
 
 app.use(express.static(publicPath));			// Sends static files from the publicPath directory
 app.use(cors());								// allowing cross origins access
@@ -95,4 +96,4 @@ app.use(function(request, response) {
 
 
 // Starts the app on port 3000 and display a message when it’s started
-app.listen(3000, console.log("App started on port 3000"));
+app.listen(port, console.log("App started on port 3000"));
