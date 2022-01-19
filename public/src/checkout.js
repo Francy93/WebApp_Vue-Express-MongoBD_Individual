@@ -1,8 +1,31 @@
 'use strict';
 
-function checkout(){
-    alert("Checkout successfully completed!\nReloading simulation..");
-    location.reload();
+async function checkout(data){
+    let date = new Date();
+
+    const orderData = {
+        name        : data.Name,
+        phone       : data.Telephone,
+        products    : vueApp.cart,
+
+        date: {
+            year    : date.getFullYear(),
+            month   : date.getMonth()+1,
+            day     : date.getDate(),            
+            hour    : date.getHours(),
+            minutes : date.getMinutes(),
+            seconds : date.getSeconds()
+        }
+    }
+
+    function callBack(response){
+        if(isNaN(response)){
+            alert("Checkout successfully completed!\r\nReloading simulation..");
+            location.reload();
+        }else alert("I'm sorry, something went wrong!\r\nError: ", response);
+    }
+
+    await ajax(orderData, callBack, "post", "mongoDB/orders/insertOne");
 }
 
 /**
@@ -13,15 +36,15 @@ function checkout(){
 function validateForm(element){
     if(element.tagName != "BUTTON"){ //if just a focus-out of the inputBox
             const validate = new Validation(element);
-            let result = validate.inputs();
+            const result = validate.inputs();
             return result;
     }else if(vueApp.cart.length > 0){                          //if the button as been presse
         const elemForm = element.form;
         const validate = new Validation(elemForm, true);
-        let TorF = validate.inputs();
-        TorF? checkout(): console.log("void button");
+        const TorF = validate.inputs();
+        TorF? checkout(validate.getData()): console.log("void button");
 
-    }else alert("Cannot checkout an empty cart!");
+    }else alert("Sorry, you cannot checkout an empty cart!");
     return false; 
 }
 
@@ -242,6 +265,12 @@ class Validation {
             this.label.style.color      = "red";
             this.oneElement.style.color = "red";
         }
+    }
+
+    //-----------------------getters methods--------------------------
+
+    getData(){
+        return this.elObj;
     }
 
 }

@@ -66,7 +66,7 @@ async function ajax(data, operation, method, url){
         case "DELETE":
             data = isJSON(data)? JSON.parse(data): data;
             output = await  fetch(url + '/' + JSON.stringify({ajax: data}), {
-                                method: method
+                                method: method,
                             }).then(response => res(response))
                             .catch(error => exception(error));
             break;

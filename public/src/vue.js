@@ -7,7 +7,7 @@ var prodList = []; 	// list of products
  * @param {array} response 
  */
 function initProduct(response){
-	prodList = JSON.parse(response).lessons;
+	prodList = JSON.parse(response);
 	startVue();
 }
 
@@ -40,8 +40,8 @@ function startVue(){
 			products: [],
 			showcase: [],
 			cart:[],
-			email: "",
-			password: "",
+			/* email: "",
+			password: "", */
 			sitename: "ShopNow",
 			cartOn: false,
 			searchOn: false,
@@ -56,12 +56,12 @@ function startVue(){
 			this.products = prodList.slice();
 			this.showcase = this.products.slice();
 
-			function getUser(response){
+			/* function getUser(response){
 				vueApp.user = JSON.parse(response).user[0].email;
 				vueApp.password = JSON.parse(response).user[0].password;
 			}
 
-			await ajax("user", getUser, "get", "user");
+			await ajax("user", getUser, "get", "user"); */
 		},
 
 		// selfrunning method which starts after the page has successfully loaded

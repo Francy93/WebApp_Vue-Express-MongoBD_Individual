@@ -21,8 +21,8 @@ app.use(express.urlencoded({ extended: true }));// used for POST request like ap
 // database MongoDB
 const mongoDB		= require('mongodb');
 const MongoClient	= mongoDB.MongoClient;
-const ObjectID		= mongoDB.ObjectID;
-const uri			= 'mongodb+srv://fa1033:Ulakulik.3977@shopnow.kzvkn.mongodb.net/main?retryWrites=true&w=majority';
+const ObjectID		= mongoDB.ObjectId;
+const uri			= 'mongodb+srv://fa1033:MDXuniversity@shopnow.kzvkn.mongodb.net/main?retryWrites=true&w=majority';
 const client		= new MongoClient(uri);
 var db;
 
@@ -66,99 +66,136 @@ app.param("mongoCollection", (req, res, next, collectionName) => {
 
 
 app.get('/mongoDB/:mongoCollection/:mongoOperation?', async (req, res, next) => {
-	const request	= isJSON(req.query.ajax)? JSON.parse(req.query.ajax): req.query.ajax;
-	const method	= req.params.mongoOperation;
+	try{
+		const method	= req.params.mongoOperation;
+		let request		= isJSON(req.query.ajax)? JSON.parse(req.query.ajax): req.query.ajax;
+		request			= typeof request === "object"? request: {_id: new ObjectID(request.toString())};
+		let result;
 
-	switch(method){
-		case "aggregate": case "countDocuments": case "distinct": case "findOne":
-			req.collection[method](request, (err,result) => {res.send(JSON.stringify(result)); console.log(result)});
-			break;
-		case "find": req.collection[method](request).toArray((e, results) => {res.send(JSON.stringify(results)); console.log(results)});
-		case "bulkWrite":
-			const result = await req.collection[method](request);
+		switch(method){
+			case "bulkWrite":	result = await req.collection[method](request);
+				break;
+			case "aggregate": case "countDocuments": case "findOne": case "distinct":
+				if		(!Array.isArray(request))							result = await req.collection[method](request);
+				else if	(Array.isArray(request) && request.length === 1)	result = await req.collection[method](request[0]);
+				else if	(Array.isArray(request) && request.length === 2)	result = await req.collection[method](request[0], request[1]);
+				else if	(Array.isArray(request) && request.length 	> 2 && method == "distinct"){
+					result = await req.collection[method](request[0], request[1], request[2]);
+				}
+				//req.collection[method](request, (err,result) => {res.send(JSON.stringify(result)); console.log(result)});
+				break;
+			case "find":
+				if		(!Array.isArray(request))							result = await req.collection[method](request).toArray();
+				else if	(Array.isArray(request) && request.length === 1)	result = await req.collection[method](request[0]).toArray();
+				else if	(Array.isArray(request) && request.length 	> 1)	result = await req.collection[method](request[0], request[1]).toArray();
+				//req.collection[method](request).toArray((e, results) => {res.send(JSON.stringify(results)); console.log(results)});
+		}
+
+		if(result !== undefined) {
 			res.send(JSON.stringify(result));
 			console.log(result);
-			break;
-		default: res.status(statusCodes.clientError.badRequest).end(); 
-	}
-	
-	/* req.collection[method](request).toArray((e, results) => {
-		if (e) return next(e);
-		res.send(results);
-		console.log(results);
-	}); */
+			return;
+		}else throw new Error("Bad Request");
+	} catch (e) { console.error(e); }
+	res.status(statusCodes.clientError.badRequest).end();
 });
 
 app.post('/mongoDB/:mongoCollection/:mongoOperation?', formData.none(), async (req, res, next) => {
-	const request	= isJSON(req.body.ajax)? JSON.parse(req.body.ajax): req.body.ajax;
-	const method	= req.params.mongoOperation;
+	try{
+		const method	= req.params.mongoOperation;
+		let request		= isJSON(req.body.ajax)? JSON.parse(req.body.ajax): req.body.ajax;
+		request			= typeof request === "object"? request: {_id: new ObjectID(request.toString())};
+		let result;
 
-	switch(method){
-		case "insertOne": case "insertMany": case "bulkWrite":
-			try {
-				const result = await req.collection[method](request);
-				res.send(JSON.stringify(result));
-				console.log(result);
-			} catch (e) { res.status(statusCodes.clientError.badRequest).end(); }
-			break;
-		default: res.status(statusCodes.clientError.badRequest).end();
-	}
+		switch(method){
+			case "insertOne": case "insertMany": case "bulkWrite":
+				if		(!Array.isArray(request))							result = await req.collection[method](request);
+				else if	(Array.isArray(request) && request.length === 1)	result = await req.collection[method](request[0]);
+				else if	(Array.isArray(request) && request.length === 2)	result = await req.collection[method](request[0], request[1]);
+				
+				if(result !== undefined) {
+					res.send(JSON.stringify(result));
+					console.log(result);
+					return;
+				}else throw new Error("Bad Request");
+		}
+	} catch (e) { console.error(e); }
+	res.status(statusCodes.clientError.badRequest).end();
 });
 
 // testing delete request
-app.delete("/mongoDB/:mongoCollection/:mongoOperation/:ajax", async function(req, res, next) {
-	const request	= isJSON(req.params.ajax)? JSON.parse(req.params.ajax).ajax: req.params.ajax.ajax;
-	const method	= req.params.mongoOperation;
+app.delete("/mongoDB/:mongoCollection/:mongoOperation/:ajax*", async function(req, res, next) {
+	try{
+		const method	= req.params.mongoOperation;
+		const reqAsseb	= isJSON(req.params.ajax)? req.params.ajax: isJSON(req.params.ajax+req.params[0])? req.params.ajax+req.params[0]: req.params.ajax;
+		let request		= isJSON(reqAsseb)? JSON.parse(reqAsseb).ajax: reqAsseb.ajax;
+		request			= typeof request === "object"? request: {_id: new ObjectID(request.toString())};
+		let result;
 
-	switch(method){
-		case "deleteOne": case "deleteMany": case "remove": case "findOneAndDelete": case "bulkWrite":
-			const result = await req.collection[method](request);
-			res.send(JSON.stringify(result));
-			console.log(result);
-			break;
-		default: res.status(statusCodes.clientError.badRequest).end(); 
-	}
+		switch(method){
+			case "deleteOne": case "deleteMany": case "remove": case "findOneAndDelete": case "bulkWrite":
+				if		(!Array.isArray(request))							result = await req.collection[method](request);
+				else if	(Array.isArray(request) && request.length === 1)	result = await req.collection[method](request[0]);
+				else if	(Array.isArray(request) && request.length === 2)	result = await req.collection[method](request[0], request[1]);
+				
+				if(result !== undefined) {
+					res.send(JSON.stringify(result));
+					console.log(result);
+					return;
+				}else throw new Error("Bad Request");
+		}
+	} catch (e) { console.error(e); }
+	res.status(statusCodes.clientError.badRequest).end();
 });
 
 // testing put request (replace)
 app.put("/mongoDB/:mongoCollection/:mongoOperation/ajax", async function(req, res, next) {
-	const request	= isJSON(req.body.ajax)? JSON.parse(req.body.ajax): req.body.ajax;
-	const method	= req.params.mongoOperation;
-	let result;
+	try{
+		const method	= req.params.mongoOperation;
+		let request		= isJSON(req.body.ajax)? JSON.parse(req.body.ajax): req.body.ajax;
+		request			= typeof request === "object"? request: {_id: new ObjectID(request.toString())};
+		let result;
 
-	switch(method){
-		case "replaceOne": case "findOneAndReplace":
-			if		(Array.isArray(request) && request.length === 2) result = await req.collection[method](request[0], request[1]);
-			else if	(Array.isArray(request) && request.length	> 2) result = await req.collection[method](request[0], request[1], request[2]);
-			else res.status(statusCodes.clientError.badRequest).end();
-			break;
-		case "bulkWrite":	result = await req.collection[method](request);
-			break;
-		default:			res.status(statusCodes.clientError.badRequest).end();
-	}
-	res.send(JSON.stringify(result));
-	console.log(result);
+		switch(method){
+			case "bulkWrite":	result = await req.collection[method](request);
+				break;
+			case "replaceOne": case "findOneAndReplace":
+				if		(Array.isArray(request) && request.length === 2) result = await req.collection[method](request[0], request[1]);
+				else if	(Array.isArray(request) && request.length	> 2) result = await req.collection[method](request[0], request[1], request[2]);
+		}
+
+		if(result !== undefined) {
+			res.send(JSON.stringify(result));
+			console.log(result);
+			return;
+		}else throw new Error("Bad Request");
+	} catch (e) { console.error(e); }
+	res.status(statusCodes.clientError.badRequest).end();
 });
 
 // testing patch request (update)
 app.patch("/mongoDB/:mongoCollection/:mongoOperation/ajax", async function(req, res, next) {
-	const request	= isJSON(req.body.ajax)? JSON.parse(req.body.ajax): req.body.ajax;
-	const method	= req.params.mongoOperation;
-	let result;
+	try{
+		const method	= req.params.mongoOperation;
+		let request		= isJSON(req.body.ajax)? JSON.parse(req.body.ajax): req.body.ajax;
+		request			= typeof request === "object"? request: {_id: new ObjectID(request.toString())};
+		let result;
 
-	//bulkWrite() to be fixed!
-	switch(method){
-		case "updateOne": case "updateMany": case "findOneAndUpdate": case "bulkWrite":
-			if		(Array.isArray(request) && request.length === 2) result = await req.collection[method](request[0], request[1]);
-			else if	(Array.isArray(request) && request.length	> 2) result = await req.collection[method](request[0], request[1], request[2]);
-			else res.status(statusCodes.clientError.badRequest).end();
-			break;
-		case "bulkWrite":	result = await req.collection[method](request);
-			break;
-		default:			res.status(statusCodes.clientError.badRequest).end();
-	}
-	res.send(JSON.stringify(result));
-	console.log(result);
+		switch(method){
+			case "bulkWrite":	result = await req.collection[method](request);
+				break;
+			case "updateOne": case "updateMany": case "findOneAndUpdate": case "bulkWrite":
+				if		(Array.isArray(request) && request.length === 2) result = await req.collection[method](request[0], request[1]);
+				else if	(Array.isArray(request) && request.length	> 2) result = await req.collection[method](request[0], request[1], request[2]);
+		}
+		
+		if(result !== undefined) {
+			res.send(JSON.stringify(result));
+			console.log(result);
+			return;
+		}else throw new Error("Bad Request");
+	} catch (e) { console.error(e); }
+	res.status(statusCodes.clientError.badRequest).end();
 });
 
 
@@ -172,22 +209,24 @@ app.patch("/mongoDB/:mongoCollection/:mongoOperation/ajax", async function(req, 
 
 
 // lessons page
-app.get("/lessons", function(request, response) {
+app.get("/lessons", async function(request, response) {
+	const products = db.collection("products");
+	
 	switch(request.query.ajax){
-		case "list":	response.sendFile(path.join(__dirname+'/../json/lessons.json'));
+		case "list":	response.send(JSON.stringify(await products.find({}).toArray()));
 			break;
-		case "amount":	response.send(require("../json/lessons.json").lessons.length.toString());
+		case "amount":	response.send(JSON.stringify(await products.countDocuments({})));
 			break;
 		default:		response.status(statusCodes.clientError.badRequest).end();
 	}
 });
     
 // User page
-app.get("/user"	 , function(request, response) {
+/* app.get("/user"	 , function(request, response) {
     // response.render
     if (request.query.ajax === "user"	)	response.sendFile(path.join(__dirname+'/../json/user.json'));
     else                                    response.status(statusCodes.clientError.badRequest).end();
-});
+}); */
 
 function reqToObj(req){
 	return {
