@@ -1,4 +1,3 @@
-'use strict';
 
 async function checkout(data){
     let date = new Date();
