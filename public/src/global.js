@@ -87,8 +87,6 @@ async function ajax(data, operation, method, url){
 }
 
 
-'use strict';
-
 
 /**
  * Array QuickSort
