@@ -1,3 +1,6 @@
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////// MODULES //////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 const express		= require("express");		// web framework
 const path			= require("path");			// resources path handler
@@ -31,6 +34,14 @@ client.connect((err, client) => db = client.db('main'));
 
 
 
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////// INITIAL SETTING ///////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+
 /**
  * Checking whether astring is a json or not
  * @param	{any} data
@@ -40,6 +51,30 @@ function isJSON(data){
     try  { JSON.parse(data); }
     catch(e) { return false; }  
     return true;
+}
+
+/**
+ * Converting a request to an object
+ * @param {object} req 
+ * @returns {object} object
+ */
+function reqToObj(req){
+	const obj = {
+		headers		: req.headers,
+		method		: req.method,
+		url			: req.url,
+		httpVersion	: req.httpVersion,
+		body		: req.body,
+		cookies		: req.cookies,
+		path		: req.path,
+		protocol	: req.protocol,
+		query		: req.query,
+		hostname	: req.hostname,
+		ip			: req.ip,
+		originalUrl	: req.originalUrl,
+		params		: req.params,
+	};
+	return obj;
 }
 
 
@@ -62,9 +97,13 @@ app.param("mongoCollection", (req, res, next, collectionName) => {
 
 
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////// MONGO REQUESTS //////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
 
+// retrieving data with the get request
 app.get('/mongoDB/:mongoCollection/:mongoOperation?', async (req, res, next) => {
 	try{
 		const method	= req.params.mongoOperation;
@@ -100,6 +139,7 @@ app.get('/mongoDB/:mongoCollection/:mongoOperation?', async (req, res, next) => 
 	res.status(statusCodes.clientError.badRequest).end();
 });
 
+// adding data with a post request
 app.post('/mongoDB/:mongoCollection/:mongoOperation?', formData.none(), async (req, res, next) => {
 	try{
 		const method	= req.params.mongoOperation;
@@ -123,7 +163,7 @@ app.post('/mongoDB/:mongoCollection/:mongoOperation?', formData.none(), async (r
 	res.status(statusCodes.clientError.badRequest).end();
 });
 
-// testing delete request
+// remove data with a delete request
 app.delete("/mongoDB/:mongoCollection/:mongoOperation/:ajax*", async function(req, res, next) {
 	try{
 		const method	= req.params.mongoOperation;
@@ -148,7 +188,7 @@ app.delete("/mongoDB/:mongoCollection/:mongoOperation/:ajax*", async function(re
 	res.status(statusCodes.clientError.badRequest).end();
 });
 
-// testing put request (replace)
+// replacing entire data by a put request (replace)
 app.put("/mongoDB/:mongoCollection/:mongoOperation/ajax", async function(req, res, next) {
 	try{
 		const method	= req.params.mongoOperation;
@@ -173,7 +213,7 @@ app.put("/mongoDB/:mongoCollection/:mongoOperation/ajax", async function(req, re
 	res.status(statusCodes.clientError.badRequest).end();
 });
 
-// testing patch request (update)
+// updating/editing data by a patch request (update)
 app.patch("/mongoDB/:mongoCollection/:mongoOperation/ajax", async function(req, res, next) {
 	try{
 		const method	= req.params.mongoOperation;
@@ -203,7 +243,9 @@ app.patch("/mongoDB/:mongoCollection/:mongoOperation/ajax", async function(req, 
 
 
 
-
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////// SERVER REQUESTS //////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
 
@@ -222,28 +264,24 @@ app.get("/lessons", async function(request, response) {
 });
     
 // User page
-/* app.get("/user"	 , function(request, response) {
+app.get("/search"	 , async function(request, response) {
     // response.render
-    if (request.query.ajax === "user"	)	response.sendFile(path.join(__dirname+'/../json/user.json'));
-    else                                    response.status(statusCodes.clientError.badRequest).end();
-}); */
+    if (!(/^\s*$/.test(request.query.ajax)))	response.send(await mongoSearch(request.query.ajax));
+    else										response.status(statusCodes.clientError.badRequest).end();
+});
 
-function reqToObj(req){
-	return {
-		headers: req.headers,
-		method: req.method,
-		url: req.url,
-		httpVersion: req.httpVersion,
-		body: req.body,
-		cookies: req.cookies,
-		path: req.path,
-		protocol: req.protocol,
-		query: req.query,
-		hostname: req.hostname,
-		ip: req.ip,
-		originalUrl: req.originalUrl,
-		params: req.params,
-  };	
+
+
+// searching method
+async function mongoSearch(string){
+	const value		= string.toString().toLowerCase();
+	const products	= db.collection("products");
+	const search	= x => { return { $or: [ {title:{'$regex' : `${x}`, '$options' : 'i'}}, {location:{'$regex' : `${x}`, '$options' : 'i'}} ] }; };
+
+	if (!(/^\s*$/.test(value))){
+		if(value.length < 2)	return await products.find(search(".*("+value+").*")).project({ id: 1, _id: 0}).toArray();
+		else					return await products.find(search("^("+value+").*" )).project({ id: 1, _id: 0}).toArray();
+	}else return null;
 }
 
 // testing post requestes (x-www-form-urlencoded, multipart/form-data and GrapQL)

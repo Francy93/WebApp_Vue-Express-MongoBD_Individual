@@ -279,12 +279,24 @@ function startVue(){
 
 
 			// searching method
-			search(){
+			async search(){
 				const value = document.getElementById("search").value.toLowerCase();
 
 				if (!(/^\s*$/.test(value))){
 					this.searchOn = true;
 					this.showcase = [];
+					
+					// sending a query
+					let response = await ajax(value, "", "get", "search");
+					response = isJSON(response)? JSON.parse(response): response;
+
+					// handling server response if any
+					if(Array.isArray(response) && response.length > 0){
+						this.showcase = this.products.filter(pro => { for(const res of response) if(res.id == pro.id) return true; })
+						return;
+					}
+
+					
 					
 					for(let product of this.products){
 						const title		= product.title.toLowerCase();

@@ -1,6 +1,11 @@
 
+/**
+ * Checking out the cart
+ * @param {array} data 
+ * @returns string
+ */
 async function checkout(data){
-    let date = new Date();
+    const date = new Date();
 
     const orderData = {
         name        : data.Name,
@@ -29,7 +34,7 @@ async function checkout(data){
         }else alert("I'm sorry, something went wrong!\r\nError: ", response);
     }
 
-    await ajax(orderData, callBack, "post", "mongoDB/orders/insertOne");
+    return await ajax(orderData, callBack, "post", "mongoDB/orders/insertOne");
 }
 
 /**
@@ -99,20 +104,16 @@ class Validation {
         if (/^([a-z]+\s?)+$/gi.test(value)){
             this.#styleSet(); //settin the input box style
             return true;
-        }else{
-            this.#styleSet(value=="", "Just letters!"); //settin the input box style
-            return false;
-        }
+        }else   this.#styleSet(value=="", "Just letters!"); //settin the input box style
+        return false;
     }
 
     validPhone(value){
         if (/^[\+]?[(]?[0-9]{3}[)]?[-\s\.]?[0-9]{3}[-\s\.]?[0-9]{4,6}$/gi.test(value)){
             this.#styleSet(); //setting the input box style back to normal
             return true;
-        }else{
-            this.#styleSet(value=="", "Just numbers!"); //settin the input box style
-            return false;
-        }
+        }else   this.#styleSet(value=="", "Wrong format!"); //settin the input box style
+        return false;
     }
 
     validEmail(value, key){
@@ -129,18 +130,16 @@ class Validation {
                 if(value != local){
                     this.#styleSet(false, "Not registered!"); //settin the input box style
                     return false;
-                }else {this.elObj[key] = value}; //overwriting a elObj value
+                }else   this.elObj[key] = value; //overwriting a elObj value
             }else if (value == local && (this.parent == "formSignup" || this.parent == "formEdit" && value != this.currentUser)){
                 console.log(this.parent+ " "+this.currentUser+" "+value);
                 this.#styleSet(false, "Already registered!"); //settin the input box style
                 return false;
-            }else {this.elObj[key] = value}; //overwriting a elObj value
-
+            }else   this.elObj[key] = value; //overwriting a elObj value
             return true;
-        }else{ 
-            this.#styleSet(value=="", "Wrong format!"); //settin the input box style
-            return false;
-        }
+
+        }else   this.#styleSet(value=="", "Wrong format!"); //settin the input box style
+        return false;
     }
 
     validUsername(value, key){
@@ -162,10 +161,8 @@ class Validation {
 				return false;
             }else return true;
 			//-------------------------------end of searching-----------------------------
-        }else{
-            this.#styleSet(value=="", "Wrong format!"); //settin the input box style
-			return false;
-        }
+        }else   this.#styleSet(value=="", "Wrong format!"); //settin the input box style
+		return false;
     }
 
 	validPassword(value, key){
@@ -180,10 +177,8 @@ class Validation {
 				this.#styleSet(false, "Wrong Password!"); //settin the input box style
 				return false;
 			}else return true;
-		}else{
-			this.#styleSet(value=="", "At least 8!"); //settin the input box style
-			return false;
-		}
+		}else   this.#styleSet(value=="", "At least 8!"); //settin the input box style
+		return false;
 	}
 
 	validRepeatPass(value){
