@@ -180,11 +180,11 @@ app.patch("/mongoDB/:mongoCollection/:mongoOperation/ajax", async function(req, 
 		let request		= isJSON(req.body.ajax)? JSON.parse(req.body.ajax): req.body.ajax;
 		request			= typeof request === "object"? request: {_id: new ObjectID(request.toString())};
 		let result;
-
+		
 		switch(method){
 			case "bulkWrite":	result = await req.collection[method](request);
 				break;
-			case "updateOne": case "updateMany": case "findOneAndUpdate": case "bulkWrite":
+			case "updateOne": case "updateMany": case "findOneAndUpdate":
 				if		(Array.isArray(request) && request.length === 2) result = await req.collection[method](request[0], request[1]);
 				else if	(Array.isArray(request) && request.length	> 2) result = await req.collection[method](request[0], request[1], request[2]);
 		}

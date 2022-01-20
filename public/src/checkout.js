@@ -17,8 +17,12 @@ async function checkout(data){
         }
     }
 
-    function callBack(response){
+    async function callBack(response){
         if(isNaN(response)){
+            for(const item of orderData.products){
+                const spaces = await ajax({id: item.id}, x => JSON.parse(x).spaces, "get", "mongoDB/products/findOne");
+                await ajax([{id: item.id}, {"$set": {spaces: spaces - item.qty}}], "", "patch", "mongoDB/products/findOneAndUpdate");
+            }
             alert("Checkout successfully completed!\r\nReloading simulation..");
             location.reload();
         }else alert("I'm sorry, something went wrong!\r\nError: ", response);

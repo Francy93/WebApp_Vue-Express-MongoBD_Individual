@@ -20,7 +20,7 @@ function isJSON(string){
 async function ajax(data, operation, method, url){
 
     data     = data     ? data     : true;
-    operation= operation? operation: x => console.log("No operation: "+x);
+    operation= operation? operation: x => { console.log("No operation: "+x); return x; };
     method   = method   ? method   : "POST";
     url      = url      ? url      : location.pathname.substring(location.pathname.lastIndexOf("/") + 1);
 
@@ -83,7 +83,7 @@ async function ajax(data, operation, method, url){
     }
 
     //running the asycronous operation
-    operation(output);
+    return operation(output);
 }
 
 
