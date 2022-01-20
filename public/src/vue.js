@@ -150,7 +150,7 @@ function startVue(){
 							break;
 						}
 					default: console.log("Wrong findInCart(?) parameter!");
-							return false;							// wrong value case
+						return false;							// wrong value case
 				}
 				
 				for(const elem of this.cart){
@@ -207,7 +207,6 @@ function startVue(){
 							if(way >= 0 &&  way <= product.spaces + this.cart[i].qty){
 								product.spaces	 = product.spaces + this.cart[i].qty - way;
 								this.cart[i].qty = way;
-								
 							}else return false;
 						}
 
@@ -230,7 +229,7 @@ function startVue(){
 				const product = this.getProduct(elem);
 
 				if(product){
-					let id = product.id;
+					const id = product.id;
 
 					if(this.findInCart(id) > 0) return this.setInCart(id, true);
 					else{
@@ -258,17 +257,22 @@ function startVue(){
 			 * @param {string} path 
 			 * @param {string} mode 
 			 */
-			productSort(path, mode){
+			productSort(attr, mode){
 				mode = mode == "ascend";
+				attr = attr.toLowerCase();
+				
+				// getting the index of the relevant attribute
+				let index = a => Object.entries(this.showcase[0]).findIndex(e => e[0] === a);
+				let path;
 
-				switch(path.toLowerCase()){
-					case "subject":		path = [1, 1];
+				switch(attr){
+					case "title":		path = [index(attr), 1];
 						break;
-					case "location":	path = [2, 1];
+					case "location":	path = [index(attr), 1];
 						break;
-					case "price":		path = [3, 1];
+					case "price":		path = [index(attr), 1];
 						break;
-					case "spaces":		path = [6, 1];
+					case "spaces":		path = [index(attr), 1];
 						break;
 					default:			path = [0, 1];
 				} 
@@ -285,18 +289,17 @@ function startVue(){
 				if (!(/^\s*$/.test(value))){
 					this.searchOn = true;
 					this.showcase = [];
-					
-					// sending a query
-					let response = await ajax(value, "", "get", "search");
-					response = isJSON(response)? JSON.parse(response): response;
 
-					// handling server response if any
+					// sending a query
+					let response	= await ajax(value, "", "get", "search");
+					response		= isJSON(response)? JSON.parse(response): response;
+
+					// handling server response if any otherwise perform a local search
 					if(Array.isArray(response) && response.length > 0){
 						this.showcase = this.products.filter(pro => { for(const res of response) if(res.id == pro.id) return true; })
 						return;
 					}
 
-					
 					
 					for(let product of this.products){
 						const title		= product.title.toLowerCase();
@@ -319,8 +322,8 @@ function startVue(){
 						}
 					}
 				}else{
-					this.showcase = this.products.slice();
-					this.searchOn = false;
+					this.showcase		= this.products.slice();
+					this.searchOn		= false;
 					this.carouselCards += 1;
 				}
 			}
