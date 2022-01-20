@@ -263,7 +263,7 @@ app.get("/lessons", async function(request, response) {
 	}
 });
     
-// User page
+// search API
 app.get("/search"	 , async function(request, response) {
     // response.render
     if (!(/^\s*$/.test(request.query.ajax)))	response.send(await mongoSearch(request.query.ajax));
@@ -283,6 +283,7 @@ async function mongoSearch(string){
 		else					return await products.find(search("^("+value+").*" )).project({ id: 1, _id: 0}).toArray();
 	}else return null;
 }
+
 
 // testing post requestes (x-www-form-urlencoded, multipart/form-data and GrapQL)
 /* app.post("/test", formData.none(), function(request, response) {

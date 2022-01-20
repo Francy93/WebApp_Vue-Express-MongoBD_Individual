@@ -258,24 +258,12 @@ function startVue(){
 			 * @param {string} mode 
 			 */
 			productSort(attr, mode){
-				mode = mode == "ascend";
+				mode = mode.toLowerCase() == "ascend";
 				attr = attr.toLowerCase();
 				
 				// getting the index of the relevant attribute
-				let index = a => Object.entries(this.showcase[0]).findIndex(e => e[0] === a);
-				let path;
-
-				switch(attr){
-					case "title":		path = [index(attr), 1];
-						break;
-					case "location":	path = [index(attr), 1];
-						break;
-					case "price":		path = [index(attr), 1];
-						break;
-					case "spaces":		path = [index(attr), 1];
-						break;
-					default:			path = [0, 1];
-				} 
+				let index	= a => Object.entries(this.showcase[0]).findIndex(e => e[0] === a);
+				const path	= [index(attr) > -1? index(attr): 0, 1];
 				
 				this.showcase = quickSort(this.showcase, mode, path);
 				this.products = quickSort(this.products, mode, path);
