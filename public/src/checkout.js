@@ -5,6 +5,7 @@ async function checkout(data){
     const orderData = {
         name        : data.Name,
         phone       : data.Telephone,
+        price       : vueApp.getTotal,
         products    : vueApp.cart,
 
         date: {
