@@ -50,7 +50,7 @@ function startVue(){
 
 
 		// selfrunning method which starts before the page has loaded
-		async created(){
+		created(){
 			console.log("Loading page...")
 
 			this.products = prodList.slice();
@@ -258,33 +258,39 @@ function startVue(){
 			 * @param {string} mode 
 			 */
 			productSort(attr, mode){
-				mode = mode.toLowerCase() == "ascend";
-				attr = attr.toLowerCase();
+				// stopping the execution of this method if the showcase array is empty
+				if(!Array.isArray(this.showcase) || !this.showcase.length) return;
+
+				mode			= mode.toLowerCase() == "ascend";
+				attr			= attr.toLowerCase();
 				
 				// getting the index of the relevant attribute
-				let index	= a => Object.entries(this.showcase[0]).findIndex(e => e[0] === a);
-				const path	= [index(attr) > -1? index(attr): 0, 1];
+				let index		= a => Object.entries(this.showcase[0]).findIndex(e => e[0] === a);
+				const path		= [index(attr) > -1? index(attr): 0, 1];
 				
-				this.showcase = quickSort(this.showcase, mode, path);
-				this.products = quickSort(this.products, mode, path);
+				this.showcase	= quickSort(this.showcase, mode, path);
+				this.products	= quickSort(this.products, mode, path);
 			},
 
 
 			// searching method
 			async search(){
+				// stopping the execution of this method if the product array is empty
+				if(!Array.isArray(this.products) || !this.products.length) return;
+
 				const value = document.getElementById("search").value.toLowerCase();
 
 				if (!(/^\s*$/.test(value))){
-					this.searchOn = true;
-					this.showcase = [];
+					this.searchOn		= true;
+					this.showcase		= [];
 
 					// sending a query
-					let response	= await ajax(value, "", "get", "search");
-					response		= isJSON(response)? JSON.parse(response): response;
+					let response		= await ajax(value, "", "get", "search");
+					response			= isJSON(response)? JSON.parse(response): response;
 
 					// handling server response if any otherwise perform a local search
 					if(Array.isArray(response) && response.length > 0){
-						this.showcase = this.products.filter(pro => { for(const res of response) if(res.id == pro.id) return true; })
+						this.showcase	= this.products.filter(pro => { for(const res of response) if(res.id == pro.id) return true; })
 						return;
 					}
 

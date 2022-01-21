@@ -112,9 +112,7 @@ app.get('/mongoDB/:mongoCollection/:mongoOperation?', async (req, res, next) => 
 		let result;
 
 		switch(method){
-			case "bulkWrite":	result = await req.collection[method](request);
-				break;
-			case "aggregate": case "countDocuments": case "findOne": case "distinct":
+			case "aggregate": case "countDocuments": case "findOne": case "distinct": case "bulkWrite":
 				if		(!Array.isArray(request))							result = await req.collection[method](request);
 				else if	(Array.isArray(request) && request.length === 1)	result = await req.collection[method](request[0]);
 				else if	(Array.isArray(request) && request.length === 2)	result = await req.collection[method](request[0], request[1]);
@@ -151,7 +149,7 @@ app.post('/mongoDB/:mongoCollection/:mongoOperation?', formData.none(), async (r
 			case "insertOne": case "insertMany": case "bulkWrite":
 				if		(!Array.isArray(request))							result = await req.collection[method](request);
 				else if	(Array.isArray(request) && request.length === 1)	result = await req.collection[method](request[0]);
-				else if	(Array.isArray(request) && request.length === 2)	result = await req.collection[method](request[0], request[1]);
+				else if	(Array.isArray(request) && request.length 	> 1)	result = await req.collection[method](request[0], request[1]);
 				
 				if(result !== undefined) {
 					res.send(JSON.stringify(result));
@@ -176,7 +174,7 @@ app.delete("/mongoDB/:mongoCollection/:mongoOperation/:ajax*", async function(re
 			case "deleteOne": case "deleteMany": case "remove": case "findOneAndDelete": case "bulkWrite":
 				if		(!Array.isArray(request))							result = await req.collection[method](request);
 				else if	(Array.isArray(request) && request.length === 1)	result = await req.collection[method](request[0]);
-				else if	(Array.isArray(request) && request.length === 2)	result = await req.collection[method](request[0], request[1]);
+				else if	(Array.isArray(request) && request.length 	> 1)	result = await req.collection[method](request[0], request[1]);
 				
 				if(result !== undefined) {
 					res.send(JSON.stringify(result));
@@ -276,7 +274,7 @@ app.get("/search"	 , async function(request, response) {
 async function mongoSearch(string){
 	const value		= string.toString().toLowerCase();
 	const products	= db.collection("products");
-	const search	= x => { return { $or: [ {title:{'$regex' : `${x}`, '$options' : 'i'}}, {location:{'$regex' : `${x}`, '$options' : 'i'}} ] }; };
+	const search	= x => { return {$or: [ {title: {'$regex': `${x}`, '$options': 'i'}}, {location:{'$regex': `${x}`, '$options': 'i'}} ]}; };
 
 	if (!(/^\s*$/.test(value))){
 		if(value.length < 2)	return await products.find(search(".*("+value+").*")).project({ id: 1, _id: 0}).toArray();
