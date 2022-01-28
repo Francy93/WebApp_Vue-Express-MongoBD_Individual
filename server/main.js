@@ -35,6 +35,7 @@ client.connect((err, client) => db = client.db('main'));
 
 
 
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////// INITIAL SETTING ///////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -73,6 +74,7 @@ function reqToObj(req){
 		ip			: req.ip,
 		originalUrl	: req.originalUrl,
 		params		: req.params,
+		collection	: req.collection
 	};
 	return obj;
 }
@@ -264,8 +266,8 @@ app.get("/lessons", async function(request, response) {
 // search API
 app.get("/search"	 , async function(request, response) {
     // response.render
-    if (!(/^\s*$/.test(request.query.ajax)))	response.send(await mongoSearch(request.query.ajax));
-    else										response.status(statusCodes.clientError.badRequest).end();
+    if (request.query.ajax && !(/^\s*$/.test(request.query.ajax)))	response.send(await mongoSearch(request.query.ajax));
+    else															response.status(statusCodes.clientError.badRequest).end();
 });
 
 
@@ -311,6 +313,7 @@ app.delete("/test/:ajax", function(request, response) {
 app.use(function(request, response) {
     response.status(statusCodes.clientError.notFound);
     response.sendFile(path.join(__dirname+'/../client/404.html'));
+	console.log(reqToObj(request));
 });
 
 
